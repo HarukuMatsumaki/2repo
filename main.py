@@ -1,44 +1,54 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow
-from PyQt5.QtGui import QPen, QPainter, QColor
-from PyQt5.QtCore import Qt
-from PyQt5 import uic
-from UI import Ui_MainWindow
-import random
+from random import randint
+
+from PyQt5 import uic, QtGui
+from PyQt5.QtWidgets import QMainWindow, QWidget, QApplication
+from PyQt5.QtGui import QPainter, QColor
 
 
-class MyWidget(QMainWindow, Ui_MainWindow):
+UIC_FILE_PATH = 'UI.ui'
+CIRCLE_COLOR = 'yellow'
+MIN_RADIUS = 10
+MAX_RADIUS = 100
+MIN_CIRCLES_QUANTITY = 2
+MAX_CIRCLES_QUANTITY = 10
+
+
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setupUi(self)
-        self.draw = False
-        self.circle_add.clicked.connect(self.trueDraw)
+        uic.loadUi(UIC_FILE_PATH, self)
+        self.initUi()
 
-    def paintEvent(self, event):
-        qp = QPainter()
-        qp.begin(self)
-        self.drawFlag(qp)
-        self.update()
-        qp.end()
+    def initUi(self):
+        self.do_paint = False
+        self.drawCircleBtn.clicked.connect(self.paint)
 
-    def drawFlag(self, qp):
-        qp.setPen(Qt.black)
-        qp.setBrush(Qt.black)
-        qp.drawRect(0, 0, self.width(), self.height())
-        if self.draw:
-            qp.setPen(QColor(random.randrange(0, 256),
-                             random.randrange(0, 256),
-                             random.randrange(0, 256)))
-            size = random.randrange(100, 500)
-            qp.drawEllipse(random.randrange(-100, self.width()),
-                           random.randrange(-100, self.height()),
-                           size, size)
+    def paint(self):
+        self.do_paint = True
+        self.repaint()
 
-    def trueDraw(self):
-        self.draw = True
+    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        if self.do_paint:
+            qp = QPainter()
+            qp.begin(self)
+            self.drawCircle(qp)
+            qp.end()
+
+    def drawCircle(self, qp: QPainter):
+        qp.setPen(QColor(CIRCLE_COLOR))
+        qp.setBrush(QColor(CIRCLE_COLOR))
+
+        for i in range(
+                randint(MIN_CIRCLES_QUANTITY, MAX_CIRCLES_QUANTITY)):
+            x, y = self.canvas.width(), self.canvas.height()
+            radius = randint(MIN_RADIUS, MAX_RADIUS)
+            qp.drawEllipse(randint(0, x - radius), randint(0, y - radius),
+                           radius, radius)
 
 
-app = QApplication(sys.argv)
-ex = MyWidget()
-ex.show()
-sys.exit(app.exec_())
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
